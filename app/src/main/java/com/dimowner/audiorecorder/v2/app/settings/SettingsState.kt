@@ -1,5 +1,6 @@
 /*
  * Copyright 2024 Dmytro Ponomarenko
+ * Modified in 2026 by the R-Recorder fork.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +24,7 @@ import com.dimowner.audiorecorder.v2.data.model.ChannelCount
 import com.dimowner.audiorecorder.v2.data.model.NameFormat
 import com.dimowner.audiorecorder.v2.data.model.RecordingFormat
 import com.dimowner.audiorecorder.v2.data.model.SampleRate
+import com.dimowner.audiorecorder.v2.data.model.StorageLocation
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -50,6 +52,10 @@ data class SettingsState(
     val audioSourceOptions: List<AudioSource> = AudioSource.entries,
     //Recording author name tag to be added to each new recording.
     val recordAuthorName: String,
+    /** Where new recordings are saved. */
+    val storageLocation: StorageLocation = StorageLocation.PUBLIC,
+    /** A line describing the folder of [storageLocation], shown under the setting. */
+    val storageFolderText: String = "",
     /** True when the user previously used V1 and intentionally switched to V2. */
     val isLegacyAppUser: Boolean = false,
 ) : Parcelable

@@ -1,5 +1,6 @@
 /*
  * Copyright 2018 Dmytro Ponomarenko
+ * Modified in 2026 by the R-Recorder fork.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +35,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.dimowner.audiorecorder.audio.player.PlayerContractNew
 import com.dimowner.audiorecorder.util.AndroidUtils
+import com.dimowner.audiorecorder.v2.audio.AacFrameIndex
 import com.dimowner.audiorecorder.v2.audio.AudioRecorderDelegate
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
@@ -61,6 +63,7 @@ class ARApplication : Application() {
         }
         super.onCreate()
         PACKAGE_NAME = applicationContext.packageName
+        AacFrameIndex.sharedStorageSidecarDir = getExternalFilesDir(null)
         applicationHandler = Handler(applicationContext.mainLooper)
         screenWidthDp = AndroidUtils.pxToDp(
             AndroidUtils.getScreenWidth(

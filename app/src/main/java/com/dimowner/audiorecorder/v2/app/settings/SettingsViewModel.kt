@@ -1,5 +1,6 @@
 /*
 * Copyright 2024 Dmytro Ponomarenko
+* Modified in 2026 by the R-Recorder fork.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -17,6 +18,10 @@
 package com.dimowner.audiorecorder.v2.app.settings
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Environment
+import android.provider.DocumentsContract
 import android.os.Parcelable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -43,6 +48,7 @@ import com.dimowner.audiorecorder.v2.data.model.BitRate
 import com.dimowner.audiorecorder.v2.data.model.ChannelCount
 import com.dimowner.audiorecorder.v2.data.model.RecordingFormat
 import com.dimowner.audiorecorder.v2.data.model.SampleRate
+import com.dimowner.audiorecorder.v2.data.model.StorageLocation
 import com.dimowner.audiorecorder.v2.data.model.isSystemAudioCaptureSupported
 import com.dimowner.audiorecorder.v2.di.qualifiers.IoDispatcher
 import com.dimowner.audiorecorder.v2.di.qualifiers.MainDispatcher
@@ -51,6 +57,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
+import java.io.File
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
@@ -66,7 +74,7 @@ internal class SettingsViewModel @Inject constructor(
     private val analyticsTracker: AnalyticsTracker,
     @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    @ApplicationContext context: Context,
+    @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val decimalFormat: DecimalFormat
@@ -149,6 +157,7 @@ internal class SettingsViewModel @Inject constructor(
             appVersion = context.getString(R.string.version, AndroidUtils.getAppVersion(context)),
             maxRecordingDurationMinutes = prefs.maxRecordingDurationMills / 60000,
             recordAuthorName = prefs.recordAuthorName,
+            storageLocation = prefs.storageLocation,
             isLegacyAppUser = prefs.isLegacyAppUser,
             selectedAudioSource = prefs.settingAudioSource,
             audioSourceOptions = supportedAudioSources(),
@@ -160,6 +169,7 @@ internal class SettingsViewModel @Inject constructor(
             val recordsCount = recordsDataSource.getRecordsCount()
             val recordsDuration = recordsDataSource.getRecordTotalDuration()
             val rawAvailableSpaceBytes = fileDataSource.getAvailableSpace()
+            val storageFolderText = storageFolderText(prefs.storageLocation)
             val settings = _state.value.recordingSettings.firstOrNull { it.recordingFormat.isSelected }
             val availableTimeMills = spaceToRecordingTimeMills(
                 rawAvailableSpaceBytes,
@@ -178,6 +188,8 @@ internal class SettingsViewModel @Inject constructor(
                     // Load the selected audio source from preferences
                     selectedAudioSource = prefs.settingAudioSource,
                     audioSourceOptions = supportedAudioSources(),
+                    storageLocation = prefs.storageLocation,
+                    storageFolderText = storageFolderText,
                 )
             }
             recordsDataSource.removeOutdatedTrashRecords()
@@ -448,7 +460,56 @@ internal class SettingsViewModel @Inject constructor(
             SettingsScreenAction.ExecuteFirstRun -> executeFirstRun()
             is SettingsScreenAction.SetAppV2 -> handleUseAppV2(action.value)
             SettingsScreenAction.UnlockLegacyAppSwitch -> unlockLegacyAppSwitch()
+            is SettingsScreenAction.SetStorageLocation -> setStorageLocation(action.value)
+            is SettingsScreenAction.SetCustomStorageFolder -> setCustomStorageFolder(action.uri)
         }
+    }
+
+    fun setStorageLocation(value: StorageLocation) {
+        prefs.storageLocation = value
+        // Reading the folders touches the disk, and the available space depends on the folder.
+        initSettings()
+    }
+
+    /** Keeps access to the folder picked in the system folder picker and saves to it from now on. */
+    fun setCustomStorageFolder(uri: Uri) {
+        val resolver = context.contentResolver
+        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        try {
+            resolver.takePersistableUriPermission(uri, flags)
+        } catch (e: SecurityException) {
+            Timber.e(e, "Failed to keep access to the picked folder")
+            return
+        }
+        val previous = prefs.customStorageTreeUri
+        if (previous != null && previous != uri.toString()) {
+            runCatching { resolver.releasePersistableUriPermission(Uri.parse(previous), flags) }
+        }
+        prefs.customStorageTreeUri = uri.toString()
+        setStorageLocation(StorageLocation.CUSTOM)
+    }
+
+    private fun storageFolderText(location: StorageLocation): String {
+        return when (location) {
+            StorageLocation.PRIVATE -> fileDataSource.getPrivateRecordingDir()?.let { shortPath(it) }.orEmpty()
+            StorageLocation.PUBLIC -> fileDataSource.getPublicRecordingDir()?.let { shortPath(it) }
+                ?: context.getString(R.string.storage_location_public_unavailable)
+            StorageLocation.CUSTOM -> prefs.customStorageTreeUri?.let { uri ->
+                context.getString(R.string.storage_location_custom_info, customFolderName(Uri.parse(uri)))
+            } ?: context.getString(R.string.storage_location_custom_none)
+        }
+    }
+
+    /** A path relative to the shared storage root, the way file managers show it. */
+    private fun shortPath(dir: File): String {
+        val root = Environment.getExternalStorageDirectory().absolutePath
+        return dir.absolutePath.removePrefix(root).removePrefix("/")
+    }
+
+    /** The picked folder's path, e.g. `primary:Recordings/Calls` becomes `Recordings/Calls`. */
+    private fun customFolderName(treeUri: Uri): String {
+        return runCatching { DocumentsContract.getTreeDocumentId(treeUri).substringAfter(':') }
+            .getOrNull()?.ifEmpty { "/" } ?: treeUri.toString()
     }
 
     fun unlockLegacyAppSwitch() {
@@ -515,4 +576,6 @@ internal sealed class SettingsScreenAction {
     data class SetRecordAuthorName(val name: String) : SettingsScreenAction()
     data object ExecuteFirstRun : SettingsScreenAction()
     data object UnlockLegacyAppSwitch : SettingsScreenAction()
+    data class SetStorageLocation(val value: StorageLocation) : SettingsScreenAction()
+    data class SetCustomStorageFolder(val uri: Uri) : SettingsScreenAction()
 }

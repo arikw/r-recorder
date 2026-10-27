@@ -1,5 +1,6 @@
 /*
  * Copyright 2026 Dmytro Ponomarenko
+ * Modified in 2026 by the R-Recorder fork.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +16,7 @@
  */
 package com.dimowner.audiorecorder.v2.audio
 
+import android.os.Environment
 import timber.log.Timber
 import java.io.BufferedOutputStream
 import java.io.DataInputStream
@@ -62,8 +64,30 @@ internal object AacFrameIndex {
     /** Largest access unit representable by the sidecar's `uint16` frame-size entry. */
     const val MAX_FRAME_SIZE = 0xFFFF
 
+    /**
+     * Where sidecars go for recordings saved in shared storage (such as Recordings/R-Recorder),
+     * which accepts only media files from apps without a storage permission. Set at app start;
+     * while null, every sidecar sits next to its recording.
+     */
+    @Volatile
+    var sharedStorageSidecarDir: File? = null
+
     /** The sidecar that belongs to [mediaFile], e.g. `Record-75.m4a` -> `.Record-75.m4a.aacidx`. */
-    fun sidecarFile(mediaFile: File): File = File(mediaFile.parentFile, ".${mediaFile.name}$SIDECAR_SUFFIX")
+    fun sidecarFile(mediaFile: File): File {
+        val name = ".${mediaFile.name}$SIDECAR_SUFFIX"
+        val fallbackDir = sharedStorageSidecarDir
+        return if (fallbackDir != null && isInSharedStorage(mediaFile)) {
+            File(fallbackDir, name)
+        } else {
+            File(mediaFile.parentFile, name)
+        }
+    }
+
+    private fun isInSharedStorage(file: File): Boolean {
+        val root = Environment.getExternalStorageDirectory().absolutePath
+        val path = file.absolutePath
+        return path.startsWith("$root/") && !path.startsWith("$root/Android/")
+    }
 
     /** Removes the sidecar of [mediaFile] if one is left over. Never throws. */
     fun delete(mediaFile: File) {

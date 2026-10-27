@@ -1,5 +1,6 @@
 /*
 * Copyright 2024 Dmytro Ponomarenko
+* Modified in 2026 by the R-Recorder fork.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -30,6 +31,7 @@ import com.dimowner.audiorecorder.v2.data.model.NameFormatToken
 import com.dimowner.audiorecorder.v2.data.model.RecordingFormat
 import com.dimowner.audiorecorder.v2.data.model.SampleRate
 import com.dimowner.audiorecorder.v2.data.model.SortOrder
+import com.dimowner.audiorecorder.v2.data.model.StorageLocation
 import com.dimowner.audiorecorder.v2.data.model.convertToBitRate
 import com.dimowner.audiorecorder.v2.data.model.convertToChannelCount
 import com.dimowner.audiorecorder.v2.data.model.convertToNameFormat
@@ -121,6 +123,24 @@ class PrefsV2Impl @Inject internal constructor(@ApplicationContext context: Cont
         set(value) {
             sharedPreferences.edit {
                 putBoolean(PREF_KEY_ALWAYS_USE_BLUETOOTH_MIC, value)
+            }
+        }
+
+    override var storageLocation: StorageLocation
+        get() = sharedPreferences.getString(PREF_KEY_STORAGE_LOCATION, null)
+            ?.let { name -> StorageLocation.entries.firstOrNull { it.name == name } }
+            ?: DefaultValues.DefaultStorageLocation
+        set(value) {
+            sharedPreferences.edit {
+                putString(PREF_KEY_STORAGE_LOCATION, value.name)
+            }
+        }
+
+    override var customStorageTreeUri: String?
+        get() = sharedPreferences.getString(PREF_KEY_CUSTOM_STORAGE_TREE_URI, null)
+        set(value) {
+            sharedPreferences.edit {
+                putString(PREF_KEY_CUSTOM_STORAGE_TREE_URI, value)
             }
         }
 
@@ -354,6 +374,8 @@ class PrefsV2Impl @Inject internal constructor(@ApplicationContext context: Cont
         private const val PREF_KEY_MAX_RECORDING_DURATION_MILLS = "pref_key_max_recording_duration_mills"
         private const val PREF_KEY_SETTING_AUDIO_SOURCE = "pref_key_setting_audio_source"
         private const val PREF_KEY_RECORD_AUTHOR_NAME = "pref_key_record_author_name"
+        private const val PREF_KEY_STORAGE_LOCATION = "pref_key_storage_location"
+        private const val PREF_KEY_CUSTOM_STORAGE_TREE_URI = "pref_key_custom_storage_tree_uri"
         private const val PREF_KEY_SAVE_DESCRIPTION_TO_FILE = "pref_key_save_description_to_file"
         private const val PREF_KEY_IS_LOCAL_STORAGE_INFO_SHOWN = "pref_key_is_local_storage_info_shown"
         private const val PREF_KEY_CUSTOM_NAME_FORMAT = "pref_key_custom_name_format"

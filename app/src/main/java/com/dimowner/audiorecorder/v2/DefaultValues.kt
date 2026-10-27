@@ -1,5 +1,6 @@
 /*
  * Copyright 2024 Dmytro Ponomarenko
+ * Modified in 2026 by the R-Recorder fork.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +24,7 @@ import com.dimowner.audiorecorder.v2.data.model.NameFormat
 import com.dimowner.audiorecorder.v2.data.model.RecordingFormat
 import com.dimowner.audiorecorder.v2.data.model.SampleRate
 import com.dimowner.audiorecorder.v2.data.model.SortOrder
+import com.dimowner.audiorecorder.v2.data.model.StorageLocation
 
 object DefaultValues {
     const val IS_APP_V2: Boolean = false
@@ -33,6 +35,7 @@ object DefaultValues {
     const val IS_KEEP_SCREEN_ON: Boolean = false
     const val IS_SAVE_DESCRIPTION_TO_FILE: Boolean = true
     const val IS_ALWAYS_USE_BLUETOOTH_MIC: Boolean = false
+    val DefaultStorageLocation: StorageLocation = StorageLocation.PUBLIC
 
     val DefaultSampleRate: SampleRate = SampleRate.SR44100
     val DefaultBitRate: BitRate = BitRate.BR128

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
@@ -11,12 +13,14 @@ jacoco {
     toolVersion = "0.8.12"
 }
 
+val forkSigningProps = rootProject.file("key/release/signing.properties")
+
 android {
     namespace = "com.dimowner.audiorecorder"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.dimowner.audiorecorder"
+        applicationId = "net.wzmn.audiorecorder"
         minSdk = 26
         targetSdk = 37
         versionCode = 951
@@ -36,6 +40,17 @@ android {
             storePassword = "android"
             keyAlias = "androiddebugkey"
             keyPassword = "android"
+        }
+        // The fork's own release key, kept outside git (see .gitignore). Builds fall back to the
+        // public sample key above when it is missing, so anyone can still build the project.
+        if (forkSigningProps.exists()) {
+            val props = Properties().apply { forkSigningProps.inputStream().use { load(it) } }
+            create("fork") {
+                storeFile = rootProject.file(props.getProperty("storeFile"))
+                storePassword = props.getProperty("storePassword")
+                keyAlias = props.getProperty("keyAlias")
+                keyPassword = props.getProperty("keyPassword")
+            }
         }
     }
 
@@ -62,13 +77,13 @@ android {
     productFlavors {
         create("debugConfig") {
             dimension = "default"
-            applicationId = "com.dimowner.audiorecorder.debug"
+            applicationId = "net.wzmn.audiorecorder.debug"
             signingConfig = signingConfigs.getByName("dev")
         }
         create("releaseConfig") {
             dimension = "default"
-            signingConfig = signingConfigs.getByName("dev")
-            applicationId = "com.dimowner.audiorecorder"
+            signingConfig = signingConfigs.findByName("fork") ?: signingConfigs.getByName("dev")
+            applicationId = "net.wzmn.audiorecorder"
         }
     }
     compileOptions {

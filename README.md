@@ -1,3 +1,22 @@
+# R-Recorder
+
+R-Recorder is a fork of [Audio Recorder](https://github.com/Dimowner/AudioRecorder) by Dmytro Ponomarenko
+(Dimowner), licensed under the Apache License 2.0. It is not affiliated with or endorsed by the original author.
+
+What it changes:
+- **Where recordings are saved** (Settings → "Save recordings to"):
+  - the app's own folder, as in the original (other apps can't read it);
+  - `Recordings/R-Recorder`, a shared folder other apps can read (the default; Android 11+);
+  - a folder you choose: recordings are made in the app's folder and copied there when they finish.
+- Its own app id (`net.wzmn.audiorecorder`), name and icon, so it installs next to the original app.
+
+Release builds are signed with the fork's own key when `key/release/signing.properties` exists (kept out of git),
+and with the public sample key otherwise. Build in a container: `tools/Containerfile`.
+
+The original project's README follows.
+
+---
+
 # Development Plans
 <b>Release v0.9.99:</b>
  - Update target SDK to 34

@@ -1,5 +1,6 @@
 /*
  * Copyright 2024 Dmytro Ponomarenko
+ * Modified in 2026 by the R-Recorder fork.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -199,6 +200,13 @@ internal fun SettingsScreen(
                 AuthorNameSettingRow(
                     currentAuthorName = uiState.recordAuthorName,
                     onAction = onAction,
+                )
+                StorageLocationSetting(
+                    selected = uiState.storageLocation,
+                    folderText = uiState.storageFolderText,
+                    enabled = uiState.isRecordingSettingEditable,
+                    onSelect = { onAction(SettingsScreenAction.SetStorageLocation(it)) },
+                    onFolderPicked = { onAction(SettingsScreenAction.SetCustomStorageFolder(it)) },
                 )
                 ResetRecordingSettingsPanel(
                     sizePerMin = stringResource(id = R.string.size_per_min, uiState.sizePerMin),

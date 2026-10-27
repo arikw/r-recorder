@@ -1,5 +1,6 @@
 /*
  * Copyright 2026 Dmytro Ponomarenko
+ * Modified in 2026 by the R-Recorder fork.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -882,6 +883,7 @@ class AudioRecordingService : Service() {
                         emitEvent(AudioRecordingServiceEvent.ShowInfoSnack(
                             applicationContext.getString(R.string.msg_recording_saved_with_name, record.name)
                         ))
+                        copyToCustomFolder(recordUpdated.path)
                         if (isNotMaxDurationHandling) {
                             emitEvent(AudioRecordingServiceEvent.RecordingStopped(
                                 recordId = recordedRecordId,
@@ -950,6 +952,7 @@ class AudioRecordingService : Service() {
             emitEvent(AudioRecordingServiceEvent.ShowInfoSnack(
                 applicationContext.getString(R.string.msg_recording_saved_with_name, recovered.name)
             ))
+            copyToCustomFolder(recovered.path)
             emitEvent(AudioRecordingServiceEvent.RecordingStopped(
                 recordId = recordId,
                 recordName = recovered.name,
@@ -961,6 +964,15 @@ class AudioRecordingService : Service() {
             )
             resetRecordedRecordPartCounter()
             true
+        }
+    }
+
+    /** Copies a finished recording to the folder the user picked, when the settings ask for it. */
+    private fun copyToCustomFolder(path: String) {
+        if (!fileDataSource.copyToCustomFolder(File(path))) {
+            emitEvent(AudioRecordingServiceEvent.ShowErrorSnack(
+                applicationContext.getString(R.string.msg_copy_to_custom_folder_failed)
+            ))
         }
     }
 

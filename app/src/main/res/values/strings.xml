@@ -1,5 +1,5 @@
 <resources>
-	<string name="app_name">Audio Recorder</string>
+	<string name="app_name" translatable="false">R-Recorder</string>
 
 	<string name="records">Records</string>
 	<string name="settings">Settings</string>
@@ -500,4 +500,14 @@
 	<!-- Label for a divider element that is a space character, U+2423 OPEN BOX -->
 	<string name="name_format_divider_space" translatable="false">␣</string>
 	<string name="name_format_preset_record" translatable="false">Record</string>
+	<!-- Storage location setting (fork) -->
+	<string name="app_launcher_name" translatable="false">R-Recorder</string>
+	<string name="storage_location">Save recordings to</string>
+	<string name="storage_location_private">App folder (other apps can\'t read it)</string>
+	<string name="storage_location_public">Recordings/R-Recorder</string>
+	<string name="storage_location_custom">A folder I choose</string>
+	<string name="storage_location_custom_none">A folder I choose (not chosen yet)</string>
+	<string name="storage_location_custom_info">Recordings are copied to %s when they finish</string>
+	<string name="storage_location_public_unavailable">Not available on this Android version, using the app folder</string>
+	<string name="msg_copy_to_custom_folder_failed">Couldn\'t copy the recording to the chosen folder.</string>
 </resources>

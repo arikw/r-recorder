@@ -1,5 +1,6 @@
 /*
  * Copyright 2024 Dmytro Ponomarenko
+ * Modified in 2026 by the R-Recorder fork.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +25,7 @@ import com.dimowner.audiorecorder.v2.data.model.NameFormatToken
 import com.dimowner.audiorecorder.v2.data.model.RecordingFormat
 import com.dimowner.audiorecorder.v2.data.model.SampleRate
 import com.dimowner.audiorecorder.v2.data.model.SortOrder
+import com.dimowner.audiorecorder.v2.data.model.StorageLocation
 import kotlinx.coroutines.flow.StateFlow
 
 interface PrefsV2 {
@@ -40,6 +42,11 @@ interface PrefsV2 {
 
     /** When true, Bluetooth microphone routing is enabled automatically when a device is available. */
     var alwaysUseBluetoothMic: Boolean
+
+    /** Where new recordings are saved. */
+    var storageLocation: StorageLocation
+    /** The folder picked for [StorageLocation.CUSTOM], as a document tree Uri, or null if none. */
+    var customStorageTreeUri: String?
 
     var activeRecordId: Long
     //Stores the last recorded record id. It is not gets cleared after recording stops.

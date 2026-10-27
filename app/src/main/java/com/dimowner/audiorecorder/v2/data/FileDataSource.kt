@@ -1,5 +1,6 @@
 /*
 * Copyright 2024 Dmytro Ponomarenko
+* Modified in 2026 by the R-Recorder fork.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -22,7 +23,23 @@ import java.io.File
 
 interface FileDataSource {
 
+    /** The folder new recordings are created in, following the storage location setting. */
     fun getRecordingDir(): File?
+
+    /**
+     * The shared Recordings/R-Recorder folder, created if needed, or null when this device
+     * does not let the app write there without a storage permission (before Android 11).
+     */
+    fun getPublicRecordingDir(): File?
+
+    /** The app's own folder under Android/data. */
+    fun getPrivateRecordingDir(): File?
+
+    /**
+     * Copies a finished recording into the folder picked by the user, when the storage location
+     * setting asks for one. Returns false when the copy was needed but failed.
+     */
+    fun copyToCustomFolder(file: File): Boolean
 
     @Throws(CantCreateFileException::class)
     fun createRecordFile(fileName: String): File
